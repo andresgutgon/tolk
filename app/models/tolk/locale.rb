@@ -63,9 +63,15 @@ module Tolk
     cattr_accessor :primary_locale_name
     self.primary_locale_name = I18n.default_locale.to_s
 
+    # Microsoft Translation Service
+    cattr_accessor :ms_enabled                            
+    cattr_accessor :ms_client_secret
+    cattr_accessor :ms_client_id
+
+    include Tolk::MsTranslator
     include Tolk::Sync
     include Tolk::Import
-
+        
     validates_uniqueness_of :name
     validates_presence_of :name
 
@@ -75,7 +81,15 @@ module Tolk
     cattr_accessor :special_keys
     self.special_keys = ['activerecord.models']
 
-    class << self
+    class << self                                    
+      debugger
+      #MS_InvalidClientId = MsTranslate::MicroOauth::InvalidClientId              
+      #MS_InvalidClientSecret = MsTranslate::MicroOauth::InvalidClientSecret              
+      def ms_translate(text,from,to)     
+        MsTranslate::Api.client_secret = self.ms_client_secret 
+        MsTranslate::Api.client_id = self.ms_client_id              
+        MsTranslate::Api.translate(text,{:from => from, :to => to}) 
+      end
       def primary_locale(reload = false)
         @_primary_locale = nil if reload
         @_primary_locale ||= begin
@@ -110,7 +124,7 @@ module Tolk
         keys = data.keys.map(&:to_s)
         keys.all? {|k| PLURALIZATION_KEYS.include?(k) }
       end
-    end
+    end  # class << self
 
     def has_updated_translations?
       translations.count(:conditions => {:'tolk_translations.primary_updated' => true}) > 0

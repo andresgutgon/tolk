@@ -6,5 +6,9 @@ Tolk::Engine.routes.draw do
       get :updated
     end
   end
+
   resource :search
+
+  match "ms_translate" => "ms_translations#translate", :as => :ms_translate, :via => :post
+
 end
